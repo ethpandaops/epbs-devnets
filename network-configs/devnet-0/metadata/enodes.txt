@@ -1,0 +1,12 @@
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+{'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}

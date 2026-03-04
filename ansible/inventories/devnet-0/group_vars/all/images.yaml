@@ -1,15 +1,15 @@
 default_ethereum_client_images:
   ### Consensus layer clients
-  lighthouse: sigp/lighthouse:latest
-  lodestar: chainsafe/lodestar:latest
-  nimbus: statusim/nimbus-eth2:multiarch-latest
-  prysm: gcr.io/offchainlabs/prysm/beacon-chain:latest
-  prysm_validator: gcr.io/offchainlabs/prysm/validator:latest
-  teku: consensys/teku:latest
+  lighthouse: ethpandaops/lighthouse:epbs-devnet-0
+  lodestar: ethpandaops/lodestar:epbs-devnet-0
+  nimbus: ethpandaops/nimbus-eth2:epbs-devnet-0
+  prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-0
+  prysm_validator: ethpandaops/prysm-validator:epbs-devnet-0
+  teku: ethpandaops/teku:StefanBratanov-devnet-0-changes
   grandine: ethpandaops/grandine:develop
   ### Execution layer clients
   besu: hyperledger/besu:latest
-  geth: ethereum/client-go:stable
+  geth: ethpandaops/geth:epbs-devnet-0
   erigon: erigontech/erigon:main-latest
   nethermind: nethermindeth/nethermind:master
   reth: ghcr.io/paradigmxyz/reth:latest
@@ -41,7 +41,7 @@ default_tooling_images:
   blobscan_indexer: blossomlabs/blobscan-indexer:latest
   dora: ethpandaops/dora:master-latest
   dugtrio: ethpandaops/dugtrio:latest
-  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.2.2
+  ethereum_genesis_generator: ethpandaops/ethereum-genesis-generator:5.3.0
   tracoor: ethpandaops/tracoor:latest
   ncli: status-im/nimbus-eth2:unstable
   lcli: ethpandaops/lighthouse:unstable
