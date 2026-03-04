@@ -4,7 +4,7 @@ dora:
   fullnameOverride: dora
   image:
     repository: ethpandaops/dora
-    tag: gloas-support
+    tag: gloas-support-amd64
     pullPolicy: Always
   resources:
     requests:
