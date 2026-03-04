@@ -4,7 +4,7 @@ dora:
   fullnameOverride: dora
   image:
     repository: ethpandaops/dora
-    tag: master-latest
+    tag: epbs-support
     pullPolicy: Always
   resources:
     requests:
@@ -49,7 +49,7 @@ dora:
   tracoorUrl: "https://tracoor.epbs-devnet-0.ethpandaops.io"
   tracoorNetwork: "epbs-devnet-0"
 
-  
+
   extraEnv:
     - name: FRONTEND_PPROF
       value: "true"
