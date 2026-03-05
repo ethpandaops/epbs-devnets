@@ -3,8 +3,8 @@ default_ethereum_client_images:
   lighthouse: ethpandaops/lighthouse:epbs-devnet-0
   lodestar: ethpandaops/lodestar:epbs-devnet-0
   nimbus: ethpandaops/nimbus-eth2:epbs-devnet-0
-  prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-0-sync-c324415
-  prysm_validator: ethpandaops/prysm-validator:epbs-devnet-0-sync-c324415
+  prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-0-sync
+  prysm_validator: ethpandaops/prysm-validator:epbs-devnet-0-sync
   teku: ethpandaops/teku:StefanBratanov-devnet-0-changes
   grandine: ethpandaops/grandine:develop
   ### Execution layer clients
