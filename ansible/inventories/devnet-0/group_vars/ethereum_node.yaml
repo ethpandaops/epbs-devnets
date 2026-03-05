@@ -8,8 +8,8 @@ ethereum_cl_bootnodes: >-
     )
     +
     (
-      [primary_bootnode]
-      | map('extract', hostvars, ['ethereum_node_fact_cl_enr'])
+      [primary_bootnode, 'lighthouse-geth-1', 'prysm-geth-1', 'lodestar-geth-1']
+      | map('extract', hostvars, ['ethereum_node_fact_discovery_cl_enr'])
       | select('defined')
       | list
     )
@@ -25,8 +25,8 @@ ethereum_el_bootnodes: >-
     )
     +
     (
-      [primary_bootnode]
-      | map('extract', hostvars, ['ethereum_node_fact_el_enode'])
+      [primary_bootnode, 'lighthouse-geth-1', 'prysm-geth-1', 'lodestar-geth-1']
+      | map('extract', hostvars, ['ethereum_node_fact_discovery_el_enode'])
       | select('defined')
       | list
     )

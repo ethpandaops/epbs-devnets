@@ -26,7 +26,7 @@ ethereum_node_beacon_hostname: "{{ ethereum_node_beacon_prefix }}{{ server_fqdn 
 primary_bootnode: bootnode-1
 
 ### Checkpoint sync specific for Ansible & Kubernetes
-checkpoint_sync_node: "{{ primary_bootnode }}"
+checkpoint_sync_node: "lighthouse-geth-1"
 ethereum_node_cl_checkpoint_sync_enabled: false
 
 checkpoint_sync_url: https://checkpoint-sync.{{ ethereum_network_name }}.{{ domain }}
