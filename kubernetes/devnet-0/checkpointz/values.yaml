@@ -50,14 +50,14 @@ checkpointz:
 
     beacon:
       upstreams:
-        - name: lighthouse-geth-1
-          address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-lighthouse-geth-1.srv.epbs-devnet-0.ethpandaops.io
+        - name: prysm-geth-2
+          address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-prysm-geth-2.srv.epbs-devnet-0.ethpandaops.io
           dataProvider: true
         - name: prysm-geth-1
           address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-prysm-geth-1.srv.epbs-devnet-0.ethpandaops.io
           dataProvider: true
           dataProvider: true
-        - name: lodestar-geth-1
-          address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-lodestar-geth-1.srv.epbs-devnet-0.ethpandaops.io
+        - name: prysm-geth-3
+          address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-prysm-geth-3.srv.epbs-devnet-0.ethpandaops.io
           dataProvider: true
 
