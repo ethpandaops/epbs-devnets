@@ -5,7 +5,7 @@ assertoor:
 
   image:
     repository: ethpandaops/assertoor
-    tag: master-latest
+    tag: gloas-support-latest
     pullPolicy: Always
   resources:
     requests:
