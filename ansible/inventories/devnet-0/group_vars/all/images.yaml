@@ -5,7 +5,7 @@ default_ethereum_client_images:
   nimbus: ethpandaops/nimbus-eth2:epbs-devnet-0
   prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-0-sync
   prysm_validator: ethpandaops/prysm-validator:epbs-devnet-0-sync
-  teku: ethpandaops/teku:StefanBratanov-devnet-0-changes
+  teku: ethpandaops/teku:master
   grandine: ethpandaops/grandine:develop
   ### Execution layer clients
   besu: hyperledger/besu:latest
