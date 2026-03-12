@@ -46,9 +46,10 @@ print_usage() {
   echo "  get_inventory                     Get the inventory of the network"
   echo "  fork_choice                       Get the fork choice of the network"
   echo "  send_blob n                       Send "n" number of blob(s) to the network [default 1]"
-  echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02)"
+  echo "  deposit s e [type]                Deposit to the network from validator index start to end - optional withdrawal type (0x00, 0x01, 0x02, 0x03)"
   echo "  topup validator_index[,index2,...] eth_amount  Top-up one or more validators with additional ETH (Pectra upgrade feature)"
   echo "  exit s e                          Exit from the network from validator index start to end - mandatory argument"
+  echo "  builder_exit index                Exit a builder (0x03 credential) by mnemonic index - uses beacon API voluntary exit with BUILDER_INDEX_FLAG"
   echo "  set_withdrawal_addr s e address   Set the withdrawal credentials for validator index start (mandatory) to end (optional) and Ethereum address"
   echo "  full_withdrawal s e               Withdraw from the network from validator index start to end - mandatory argument"
   echo "  help                              Print this help message"
@@ -361,6 +362,7 @@ for arg in "${command[@]}"; do
         echo "    0x00 (default) - BLS withdrawal credentials"
         echo "    0x01          - Execution address withdrawal"
         echo "    0x02          - Custom execution address with amount"
+        echo "    0x03          - ePBS builder credentials with amount"
         echo ""
         echo "  Examples:"
         echo "    ${0} deposit 0 10                                    # Default (0x00) - BLS withdrawal credentials"
@@ -369,6 +371,8 @@ for arg in "${command[@]}"; do
         echo "    ${0} deposit 0 10 0x02                               # Custom execution address with amount (prompts for both)"
         echo "    ${0} deposit 0 10 0x02 0x742d35Cc...                 # Custom execution address with amount (prompts for amount)"
         echo "    ${0} deposit 0 10 0x02 0x742d35Cc... 35              # Custom execution address with amount (35 ETH)"
+        echo "    ${0} deposit 0 10 0x03                               # ePBS builder credentials (prompts for address and amount)"
+        echo "    ${0} deposit 0 10 0x03 0x742d35Cc... 33              # ePBS builder credentials with address and 33 ETH"
         exit;
       else
         # Set default withdrawal type to 0x00 if not provided
@@ -426,9 +430,35 @@ for arg in "${command[@]}"; do
             # Convert ETH to gwei (1 ETH = 1,000,000,000 gwei)
             deposit_amount=$((deposit_amount_eth * 1000000000))
             ;;
+          "0x03")
+            echo "Using withdrawal credentials type: 0x03 (ePBS builder)"
+            if [[ -n "${command[5]}" ]]; then
+              withdrawal_address="${command[5]}"
+              echo "Using provided withdrawal address: $withdrawal_address"
+            else
+              echo "Please enter the builder withdrawal address:"
+              read -r withdrawal_address
+            fi
+            if [[ ! $withdrawal_address =~ ^0x[a-fA-F0-9]{40}$ ]]; then
+              echo "Invalid withdrawal address format. Must be a valid Ethereum address."
+              exit 1
+            fi
+            if [[ -n "${command[6]}" ]]; then
+              deposit_amount_eth="${command[6]}"
+              echo "Using provided deposit amount: $deposit_amount_eth ETH"
+            else
+              echo "Please enter the deposit amount in ETH (minimum 32 ETH):"
+              read -r deposit_amount_eth
+            fi
+            if [[ $deposit_amount_eth -lt 32 ]]; then
+              echo "Deposit amount must be at least 32 ETH."
+              exit 1
+            fi
+            deposit_amount=$((deposit_amount_eth * 1000000000))
+            ;;
           *)
             echo "Invalid withdrawal type: $withdrawal_type"
-            echo "Supported types: 0x00, 0x01, 0x02"
+            echo "Supported types: 0x00, 0x01, 0x02, 0x03"
             exit 1
             ;;
         esac
@@ -439,8 +469,108 @@ for arg in "${command[@]}"; do
         fork_version=$(curl -s $bn_endpoint/eth/v1/beacon/genesis | jq -r '.data.genesis_fork_version')
         deposit_contract_address=$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.DEPOSIT_CONTRACT_ADDRESS')
 
-        # Build eth2-val-tools command based on withdrawal type
-        if [[ $withdrawal_type == "0x00" ]]; then
+        # Build deposit data based on withdrawal type
+        if [[ $withdrawal_type == "0x03" ]]; then
+          # eth2-val-tools does not support 0x03 credentials; generate with BLS signing via Python
+          python3 -c "
+import hashlib, hmac, struct, json, sys
+from mnemonic import Mnemonic
+from py_ecc.bls import G2ProofOfPossession as bls
+from py_ecc.optimized_bls12_381 import curve_order
+
+def flip_bits_256(b):
+    return bytes([~x & 0xFF for x in b])
+
+def IKM_to_lamport_SK(IKM, salt):
+    OKM = b''
+    PRK = hmac.new(salt, IKM, hashlib.sha256).digest()
+    prev = b''
+    for i in range(1, 9):
+        prev = hmac.new(PRK, prev + struct.pack('B', i), hashlib.sha256).digest()
+        OKM += prev
+    return [OKM[j:j+32] for j in range(0, len(OKM), 32)]
+
+def parent_SK_to_lamport_PK(parent_SK, index):
+    salt = index.to_bytes(4, 'big')
+    IKM = parent_SK.to_bytes(32, 'big')
+    l0 = IKM_to_lamport_SK(IKM, salt)
+    l1 = IKM_to_lamport_SK(flip_bits_256(IKM), salt)
+    return hashlib.sha256(b''.join(hashlib.sha256(s).digest() for s in l0 + l1)).digest()
+
+def HKDF_mod_r(IKM, key_info=b''):
+    PRK = hmac.new(hashlib.sha256(b'BLS-SIG-KEYGEN-SALT-').digest(), IKM + b'\x00', hashlib.sha256).digest()
+    OKM = b''
+    prev = b''
+    for i in range(1, 4):
+        prev = hmac.new(PRK, prev + key_info + struct.pack('B', i), hashlib.sha256).digest()
+        OKM += prev
+    return int.from_bytes(OKM[:48], 'big') % curve_order
+
+def derive_child_SK(parent_SK, index):
+    return HKDF_mod_r(parent_SK_to_lamport_PK(parent_SK, index))
+
+def derive_master_SK(seed):
+    return HKDF_mod_r(seed)
+
+def derive_key_from_path(seed, path):
+    key = derive_master_SK(seed)
+    for idx in path:
+        key = derive_child_SK(key, idx)
+    return key
+
+def sha256(data):
+    return hashlib.sha256(data).digest()
+
+def merkleize(chunks):
+    if not chunks:
+        return b'\x00' * 32
+    while len(chunks) > 1:
+        if len(chunks) % 2:
+            chunks.append(b'\x00' * 32)
+        chunks = [sha256(chunks[i] + chunks[i+1]) for i in range(0, len(chunks), 2)]
+    return chunks[0]
+
+def pack_bytes(data, size=32):
+    padded = data + b'\x00' * (-len(data) % size)
+    return [padded[i:i+size] for i in range(0, len(padded), size)]
+
+DOMAIN_DEPOSIT = bytes.fromhex('03000000')
+fork_version = bytes.fromhex(sys.argv[1].replace('0x', ''))
+mnemonic_phrase = sys.argv[2]
+source_min = int(sys.argv[3])
+source_max = int(sys.argv[4])
+amount = int(sys.argv[5])
+wd_addr = bytes.fromhex(sys.argv[6].replace('0x', ''))
+
+seed = Mnemonic('english').to_seed(mnemonic_phrase)
+fork_data_root = sha256(fork_version.ljust(32, b'\x00') + b'\x00' * 32)
+domain = DOMAIN_DEPOSIT + fork_data_root[:28]
+
+for idx in range(source_min, source_max):
+    sk = derive_key_from_path(seed, [12381, 3600, idx, 0, 0])
+    pubkey = bls.SkToPk(sk)
+    wd_creds = b'\x03' + b'\x00' * 11 + wd_addr
+
+    pk_root = merkleize(pack_bytes(pubkey))
+    amount_root = amount.to_bytes(32, 'little')
+    msg_root = merkleize([pk_root, wd_creds, amount_root])
+    signing_root = sha256(msg_root + domain)
+    sig = bls.Sign(sk, signing_root)
+
+    sig_root = merkleize(pack_bytes(sig))
+    dd_root = merkleize([pk_root, wd_creds, amount_root, sig_root])
+
+    print(json.dumps({
+        'account': f'm/12381/3600/{idx}/0/0',
+        'deposit_data_root': dd_root.hex(),
+        'pubkey': pubkey.hex(),
+        'signature': sig.hex(),
+        'value': amount,
+        'version': 1,
+        'withdrawal_credentials': wd_creds.hex()
+    }))
+" "$fork_version" "$sops_mnemonic" "${command[2]}" "${command[3]}" "$deposit_amount" "$withdrawal_address" > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
+        elif [[ $withdrawal_type == "0x00" ]]; then
           eth2-val-tools deposit-data --source-min=${command[2]} --source-max=${command[3]} --amount=$deposit_amount --fork-version=$fork_version --withdrawals-mnemonic="$sops_mnemonic" --validators-mnemonic="$sops_mnemonic" --withdrawal-credentials-type=$withdrawal_type > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
         else
           eth2-val-tools deposit-data --source-min=${command[2]} --source-max=${command[3]} --amount=$deposit_amount --fork-version=$fork_version --withdrawals-mnemonic="$sops_mnemonic" --validators-mnemonic="$sops_mnemonic" --withdrawal-credentials-type=$withdrawal_type --withdrawal-address=$withdrawal_address > deposits_$prefix-$network-${command[2]}_${command[3]}.txt
@@ -457,6 +587,9 @@ for arg in "${command[@]}"; do
         echo "  Withdrawal type: $withdrawal_type"
         if [[ $withdrawal_type != "0x00" ]]; then
           echo "  Withdrawal address: $withdrawal_address"
+        fi
+        if [[ $withdrawal_type == "0x03" ]]; then
+          echo "  Builder credentials: yes (ePBS)"
         fi
         echo "  Deposit per validator: $((deposit_amount / 1000000000)) ETH"
         echo "  Total deposit: $total_deposit_eth ETH"
@@ -704,6 +837,158 @@ for arg in "${command[@]}"; do
           ethdo validator exit --mnemonic="$sops_mnemonic" --connection=$bn_endpoint --offline --path="m/12381/3600/${command[2]}/0/0"
           echo "validator $i exit submitted"
           exit;
+        fi
+        exit;
+      fi
+      ;;
+    "builder_exit")
+      if [[ $# -lt 2 || $# -gt 3 ]]; then
+        echo "Builder exit requires 1-2 arguments!"
+        echo "  Usage: ${0} builder_exit mnemonic_index [builder_index]"
+        echo "  Example: ${0} builder_exit 388        # mnemonic index 388, auto-detect builder_index from pubkey"
+        echo "  Example: ${0} builder_exit 388 0      # mnemonic index 388, builder_index 0"
+        echo ""
+        echo "  NOTE: Builder exits use the voluntary exit API with BUILDER_INDEX_FLAG (2^40)."
+        echo "  This requires CL clients with ePBS builder exit API support."
+        exit;
+      else
+        mnemonic_index=${command[2]}
+        builder_index_override=${command[3]:-""}
+
+        echo "Generating builder exit for mnemonic index $mnemonic_index..."
+
+        signed_exit=$(python3 -c "
+import hashlib, hmac, struct, json, sys
+from mnemonic import Mnemonic
+from py_ecc.bls import G2ProofOfPossession as bls
+from py_ecc.optimized_bls12_381 import curve_order
+
+def flip_bits_256(b):
+    return bytes([~x & 0xFF for x in b])
+
+def IKM_to_lamport_SK(IKM, salt):
+    OKM = b''
+    PRK = hmac.new(salt, IKM, hashlib.sha256).digest()
+    prev = b''
+    for i in range(1, 9):
+        prev = hmac.new(PRK, prev + struct.pack('B', i), hashlib.sha256).digest()
+        OKM += prev
+    return [OKM[j:j+32] for j in range(0, len(OKM), 32)]
+
+def parent_SK_to_lamport_PK(parent_SK, index):
+    salt = index.to_bytes(4, 'big')
+    IKM = parent_SK.to_bytes(32, 'big')
+    l0 = IKM_to_lamport_SK(IKM, salt)
+    l1 = IKM_to_lamport_SK(flip_bits_256(IKM), salt)
+    return hashlib.sha256(b''.join(hashlib.sha256(s).digest() for s in l0 + l1)).digest()
+
+def HKDF_mod_r(IKM, key_info=b''):
+    PRK = hmac.new(hashlib.sha256(b'BLS-SIG-KEYGEN-SALT-').digest(), IKM + b'\x00', hashlib.sha256).digest()
+    OKM = b''
+    prev = b''
+    for i in range(1, 4):
+        prev = hmac.new(PRK, prev + key_info + struct.pack('B', i), hashlib.sha256).digest()
+        OKM += prev
+    return int.from_bytes(OKM[:48], 'big') % curve_order
+
+def derive_child_SK(parent_SK, index):
+    return HKDF_mod_r(parent_SK_to_lamport_PK(parent_SK, index))
+
+def derive_master_SK(seed):
+    return HKDF_mod_r(seed)
+
+def derive_key_from_path(seed, path):
+    key = derive_master_SK(seed)
+    for idx in path:
+        key = derive_child_SK(key, idx)
+    return key
+
+def sha256(data):
+    return hashlib.sha256(data).digest()
+
+BUILDER_INDEX_FLAG = 2**40
+DOMAIN_VOLUNTARY_EXIT = bytes.fromhex('04000000')
+
+mnemonic_phrase = sys.argv[1]
+mnemonic_index = int(sys.argv[2])
+capella_fork_version = bytes.fromhex(sys.argv[3].replace('0x', ''))
+genesis_validators_root = bytes.fromhex(sys.argv[4].replace('0x', ''))
+builder_index = int(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[5] else -1
+
+seed = Mnemonic('english').to_seed(mnemonic_phrase)
+sk = derive_key_from_path(seed, [12381, 3600, mnemonic_index, 0, 0])
+pk = bls.SkToPk(sk)
+
+if builder_index < 0:
+    import urllib.request
+    bn = sys.argv[6]
+    resp = urllib.request.urlopen(f'{bn}/eth/v2/debug/beacon/states/head', timeout=30)
+    state = json.loads(resp.read())['data']
+    builders = state.get('builders', [])
+    pk_hex = pk.hex()
+    for i, b in enumerate(builders):
+        if b['pubkey'].replace('0x', '') == pk_hex:
+            builder_index = i
+            break
+    if builder_index < 0:
+        print(json.dumps({'error': f'Builder with pubkey 0x{pk_hex[:20]}... not found in beacon state'}))
+        sys.exit(1)
+
+exit_vi = builder_index | BUILDER_INDEX_FLAG
+epoch_leaf = struct.pack('<Q', 0).ljust(32, b'\\x00')
+vi_leaf = struct.pack('<Q', exit_vi).ljust(32, b'\\x00')
+ve_root = sha256(epoch_leaf + vi_leaf)
+
+fork_data_root = sha256(capella_fork_version.ljust(32, b'\\x00') + genesis_validators_root)
+domain = DOMAIN_VOLUNTARY_EXIT + fork_data_root[:28]
+signing_root = sha256(ve_root + domain)
+sig = bls.Sign(sk, signing_root)
+
+print(json.dumps({
+    'message': {'epoch': '0', 'validator_index': hex(exit_vi)},
+    'signature': '0x' + sig.hex(),
+    'builder_index': builder_index,
+    'builder_pubkey': '0x' + pk.hex()
+}))
+" "$sops_mnemonic" "$mnemonic_index" \
+          "$(curl -s $bn_endpoint/eth/v1/config/spec | jq -r '.data.CAPELLA_FORK_VERSION')" \
+          "$(curl -s $bn_endpoint/eth/v1/beacon/genesis | jq -r '.data.genesis_validators_root')" \
+          "$builder_index_override" \
+          "$bn_endpoint")
+
+        if echo "$signed_exit" | jq -e '.error' > /dev/null 2>&1; then
+          echo "Error: $(echo "$signed_exit" | jq -r '.error')"
+          exit 1
+        fi
+
+        builder_idx=$(echo "$signed_exit" | jq -r '.builder_index')
+        builder_pk=$(echo "$signed_exit" | jq -r '.builder_pubkey')
+        vi_hex=$(echo "$signed_exit" | jq -r '.message.validator_index')
+
+        echo "Builder found:"
+        echo "  Builder index: $builder_idx"
+        echo "  Builder pubkey: $builder_pk"
+        echo "  Validator index (with flag): $vi_hex"
+        echo ""
+        echo "Submit builder exit? (y/n)"
+        read -r response
+        if [[ $response == "y" ]]; then
+          exit_payload=$(echo "$signed_exit" | jq '{message: {epoch: .message.epoch, validator_index: .message.validator_index}, signature: .signature}')
+          echo "Submitting to beacon node..."
+          result=$(curl -s -X POST "$bn_endpoint/eth/v1/beacon/pool/voluntary_exits" \
+            -H "Content-Type: application/json" \
+            -d "$exit_payload")
+          if [[ -z "$result" || "$result" == "{}" ]]; then
+            echo "Builder exit submitted successfully!"
+          else
+            echo "Response: $result"
+            echo ""
+            echo "NOTE: Builder exits via the voluntary exit API require CL client support"
+            echo "for the BUILDER_INDEX_FLAG (2^40) in validator_index. Not all clients"
+            echo "support this yet. The signed exit JSON has been printed above for manual use."
+          fi
+        else
+          echo "Cancelled."
         fi
         exit;
       fi
