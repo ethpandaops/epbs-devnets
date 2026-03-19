@@ -8,10 +8,9 @@ sops_name=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.so
 sops_password=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_nginx_shared_basic_auth.password')
 sops_mnemonic=$(sops --decrypt ../ansible/inventories/$network/group_vars/all/all.sops.yaml | yq -r '.secret_genesis_mnemonic')
 rpc_prefix=$(yq -r '.ethereum_node_rpc_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
-rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@rpc.$node.$prefix-$network.$domain}"
+rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@rpc.$prefix-$network.$domain}"
 beacon_prefix=$(yq -r '.ethereum_node_beacon_prefix' ../ansible/inventories/$network/group_vars/all/all.yaml)
 bn_endpoint="${BEACON_ENDPOINT:-https://$sops_name:$sops_password@$beacon_prefix$node.$srv.$prefix-$network.$domain}"
-rpc_endpoint="${RPC_ENDPOINT:-https://$sops_name:$sops_password@$rpc_prefix$node.$srv.$prefix-$network.$domain}"
 bootnode_endpoint="${BOOTNODE_ENDPOINT:-https://bootnode-1.$prefix-$network.$domain}"
 
 # Helper function to display available options
@@ -597,13 +596,14 @@ for idx in range(source_min, source_max):
         echo "Continue? (y/n)"
         read -r response
         if [[ $response == "y" ]]; then
-          nonce_hex=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'$publickey'","pending"],"id":0}' $rpc_endpoint | jq -r '.result')
+          nonce_hex=$(curl -s --header 'Content-Type: application/json' --data-raw '{"jsonrpc":"2.0","method":"eth_getTransactionCount","params":["'$publickey'","latest"],"id":0}' $rpc_endpoint | jq -r '.result')
           nonce=$(( ${nonce_hex} ))
           deposit_eth=$((deposit_amount / 1000000000))
 
           echo "Starting nonce: $nonce | Deposit per validator: ${deposit_eth} ETH"
 
           i=0
+          pids=()
           while read x; do
             account_name="$(echo "$x" | jq -r '.account')"
             pubkey_val="0x$(echo "$x" | jq -r '.pubkey')"
@@ -619,13 +619,27 @@ for idx in range(source_min, source_max):
               --gas-limit 200000 \
               "$deposit_contract_address" \
               "deposit(bytes,bytes,bytes,bytes32)" \
-              "$pubkey_val" "$withdrawal_creds" "$signature_val" "$data_root" > /dev/null 2>&1 &
+              "$pubkey_val" "$withdrawal_creds" "$signature_val" "$data_root" >> deposit.log 2>&1 &
+            pids+=($!)
             i=$((i + 1))
           done < deposits_$prefix-$network-${command[2]}_${command[3]}.txt
 
           echo "Submitted $i deposits in parallel, waiting for confirmations..."
-          wait
-          echo "All $i deposits confirmed"
+          failed=0
+          succeeded=0
+          for pid in "${pids[@]}"; do
+            if wait $pid; then
+              succeeded=$((succeeded + 1))
+            else
+              failed=$((failed + 1))
+            fi
+          done
+          if [[ $failed -gt 0 ]]; then
+            echo "WARNING: $failed/$i deposits failed, $succeeded/$i succeeded"
+            echo "Check logs in /tmp/deposit_*.log for details"
+          else
+            echo "All $i deposits submitted successfully"
+          fi
           exit;
         else
           echo "Exiting without depositing to the network"

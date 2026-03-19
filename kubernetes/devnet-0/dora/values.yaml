@@ -31,6 +31,10 @@ dora:
   name: epbs-devnet-0
   configPath: "https://config.epbs-devnet-0.ethpandaops.io/cl/config.yaml"
   validatorNamesInventory: "https://config.epbs-devnet-0.ethpandaops.io/api/v1/nodes/validator-ranges"
+  ranges: |
+    1900-1900: grandine-geth-1
+    1901-1932: Lido
+    1933-1983: grandine-geth-1
   ethExplorerLink: "https://explorer.epbs-devnet-0.ethpandaops.io"
   publicRpcUrl: "https://rpc.epbs-devnet-0.ethpandaops.io"
   rainbowkitProjectId: "15fe4ab4d5c0bcb6f0dc7c398301ff0e"
@@ -49,7 +53,7 @@ dora:
   tracoorUrl: "https://tracoor.epbs-devnet-0.ethpandaops.io"
   tracoorNetwork: "epbs-devnet-0"
 
-  
+
   extraEnv:
     - name: FRONTEND_PPROF
       value: "true"
