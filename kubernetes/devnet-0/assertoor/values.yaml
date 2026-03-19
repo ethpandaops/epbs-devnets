@@ -49,6 +49,9 @@ assertoor:
     - name:  bootnode-1
       executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-bootnode-1.srv.epbs-devnet-0.ethpandaops.io
       consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-bootnode-1.srv.epbs-devnet-0.ethpandaops.io
+    - name:  grandine-geth-1
+      executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-grandine-geth-1.srv.epbs-devnet-0.ethpandaops.io
+      consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-grandine-geth-1.srv.epbs-devnet-0.ethpandaops.io
     - name:  lighthouse-geth-1
       executionUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-lighthouse-geth-1.srv.epbs-devnet-0.ethpandaops.io
       consensusUrl: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-lighthouse-geth-1.srv.epbs-devnet-0.ethpandaops.io
@@ -88,6 +91,7 @@ assertoor:
     walletPrivkey: "<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.assertoor_private_key}>"
     clientPairNames:
       - bootnode-1
+      - grandine-geth-1
       - lighthouse-geth-1
       - lighthouse-geth-2
       - lighthouse-geth-3
@@ -100,6 +104,7 @@ assertoor:
       - prysm-geth-3
       - teku-geth-1
     validatorPairNames:
+      - grandine-geth-1
       - lighthouse-geth-2
       - lighthouse-geth-3
       - lodestar-geth-1

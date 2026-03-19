@@ -31,5 +31,6 @@ variable "nodes" {
     { name = "lodestar-geth", count = 3, cloud = "hetzner", validator_start = 1200, validator_end = 1800 },
     { name = "teku-geth", count = 1, cloud = "hetzner", validator_start = 1800, validator_end = 1850 },
     { name = "nimbus-geth", count = 1, cloud = "hetzner", validator_start = 1850, validator_end = 1900 },
+    { name = "grandine-geth", count = 1, cloud = "hetzner", validator_start = 1900, validator_end = 1950 },
   ]
 }

@@ -4,7 +4,7 @@ bootstrap_default_user_authorized_keys_github_team_cl:
   - tumas
   - povi
   - hangleang
-
+grandine_announced_ipv6: "::"
 # role: geerlingguy.docker
 docker_daemon_options:
   "log-driver": "json-file"

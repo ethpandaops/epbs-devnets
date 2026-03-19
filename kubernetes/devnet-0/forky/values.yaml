@@ -82,6 +82,11 @@ forky:
           config:
             address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-bootnode-1.srv.epbs-devnet-0.ethpandaops.io
             polling_interval: "12s"
+        - name: grandine-geth-1
+          type: "beacon_node"
+          config:
+            address: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-grandine-geth-1.srv.epbs-devnet-0.ethpandaops.io
+            polling_interval: "12s"
         - name: lighthouse-geth-1
           type: "beacon_node"
           config:

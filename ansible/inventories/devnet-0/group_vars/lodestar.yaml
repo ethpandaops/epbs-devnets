@@ -1,4 +1,4 @@
-ethereum_node_cl_checkpoint_sync_enabled: false
+ethereum_node_cl_checkpoint_sync_enabled: true
 
 # role: ethpandaops.general.bootstrap
 bootstrap_default_user_authorized_keys_github_team_cl:
@@ -46,6 +46,7 @@ lodestar_container_command_extra_args:
   - --rest.namespace="*"
   - --network.connectToDiscv5Bootnodes
   - --nat=true
+  - --forceCheckpointSync # temp flag till proper db restarts work
 lodestar_validator_container_volumes:
   - "{{ lodestar_validator_datadir }}:/validator-data"
   - "{{ eth_testnet_config_dir }}:/network-config:ro"

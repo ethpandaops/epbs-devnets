@@ -26,7 +26,7 @@ xatu-mimicry:
       config:
         retryInterval: 60s
         nodeRecords:
-          - {'changed': False, 'skipped': True, 'skip_reason': 'Conditional result was False', 'false_condition': 'ethereum_node_el in ["ethereumjs"]'}
+          - enode://0cbe293b282466ffcaf6b9d15c04bd98da960334bd67d904990de251f4ad6ab3bf5b13abbe68b3673ebd24e9bcb49810bee1bc2e3148395903e28c4326d27229@91.98.233.229:30303?discport=30303
     outputs:
     - name: grpc
       type: xatu

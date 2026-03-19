@@ -4,8 +4,8 @@ dora:
   fullnameOverride: dora
   image:
     repository: ethpandaops/dora
-    tag: gloas-support-amd64
-    pullPolicy: Always
+    tag: gloas-support
+    pullPolicy: IfNotPresent
   resources:
     requests:
       cpu: 500m
@@ -49,7 +49,7 @@ dora:
   tracoorUrl: "https://tracoor.epbs-devnet-0.ethpandaops.io"
   tracoorNetwork: "epbs-devnet-0"
 
-
+  
   extraEnv:
     - name: FRONTEND_PPROF
       value: "true"
@@ -62,8 +62,9 @@ dora:
   postgresql:
     name: "dora-postgresql"
     fullnameOverride: "dora-postgresql"
-    persistence:
-      size: "50Gi"
+    primary:
+      persistence:
+        size: "80Gi"
 
   mevRelays:
     - index: 0

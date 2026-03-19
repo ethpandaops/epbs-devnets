@@ -105,6 +105,16 @@ tracoor-single:
             traceDisableMemory: true
             traceDisableStack: true
             traceDisableStorage: true
+      - name: grandine-geth-1
+        ethereum:
+          overrideNetworkName: epbs-devnet-0
+          beacon:
+            nodeAddress: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@bn-grandine-geth-1.srv.epbs-devnet-0.ethpandaops.io
+          execution:
+            nodeAddress: https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-grandine-geth-1.srv.epbs-devnet-0.ethpandaops.io
+            traceDisableMemory: true
+            traceDisableStack: true
+            traceDisableStorage: true
       - name: lighthouse-geth-1
         ethereum:
           overrideNetworkName: epbs-devnet-0
