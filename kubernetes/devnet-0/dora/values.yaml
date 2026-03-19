@@ -4,8 +4,8 @@ dora:
   fullnameOverride: dora
   image:
     repository: ethpandaops/dora
-    tag: gloas-support
-    pullPolicy: IfNotPresent
+    tag: gloas-support-latest
+    pullPolicy: Always
   resources:
     requests:
       cpu: 500m
