@@ -26,7 +26,9 @@ variable "nodes" {
   description = "List of node definitions for the devnet"
   default = [
     { name = "bootnode", count = 1, cloud = "hetzner" },
-    { name = "prysm-geth", count = 5, cloud = "hetzner", validator_start = 0, validator_end = 1000 },
-    { name = "prysm-nethermind", count = 5, cloud = "hetzner", validator_start = 1000, validator_end = 2000 },
+    { name = "prysm-geth", count = 3, cloud = "hetzner", validator_start = 0, validator_end = 600 },
+    { name = "prysm-nethermind", count = 3, cloud = "hetzner", validator_start = 600, validator_end = 1200 },
+    { name = "lodestar-geth", count = 2, cloud = "hetzner", validator_start = 1200, validator_end = 1600 },
+    { name = "lodestar-nethermind", count = 2, cloud = "hetzner", validator_start = 1600, validator_end = 2000 },
   ]
 }
