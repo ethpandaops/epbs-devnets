@@ -1,17 +1,17 @@
 default_ethereum_client_images:
   ### Consensus layer clients
-  lighthouse: ethpandaops/lighthouse:epbs-devnet-0
-  lodestar: ethpandaops/lodestar:epbs-devnet-0
-  nimbus: ethpandaops/nimbus-eth2:epbs-devnet-0
-  prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-0
-  prysm_validator: ethpandaops/prysm-validator:epbs-devnet-0
+  lighthouse: ethpandaops/lighthouse:epbs-devnet-1
+  lodestar: ethpandaops/lodestar:epbs-devnet-1
+  nimbus: ethpandaops/nimbus-eth2:epbs-devnet-1
+  prysm: ethpandaops/prysm-beacon-chain:epbs-devnet-1
+  prysm_validator: ethpandaops/prysm-validator:epbs-devnet-1
   teku: ethpandaops/teku:master
-  grandine: ethpandaops/grandine:epbs-devnet-0
+  grandine: ethpandaops/grandine:epbs-devnet-1
   ### Execution layer clients
   besu: hyperledger/besu:latest
-  geth: ethpandaops/geth:epbs-devnet-0
+  geth: ethpandaops/geth:epbs-devnet-1
   erigon: erigontech/erigon:main-latest
-  nethermind: nethermindeth/nethermind:master
+  nethermind: ethpandaops/nethermind:epbs-devnet-1
   reth: ghcr.io/paradigmxyz/reth:latest
   nimbusel: ethpandaops/nimbus-eth1:master
   ethrex: ghcr.io/lambdaclass/ethrex:latest

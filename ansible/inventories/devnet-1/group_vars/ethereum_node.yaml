@@ -6,15 +6,14 @@ ethereum_cl_bootnodes: >-
       | select('defined')
       | list
     )
-    +
-    (
-      [primary_bootnode, 'lodestar-geth-1', 'lodestar-geth-2', 'lodestar-geth-3']
-      | map('extract', hostvars, ['ethereum_node_fact_discovery_cl_enr'])
-      | select('defined')
-      | list
-    )
   }}
-
+# +
+# (
+#   [primary_bootnode, 'lodestar-geth-1', 'lodestar-geth-2', 'lodestar-geth-3']
+#   | map('extract', hostvars, ['ethereum_node_fact_discovery_cl_enr'])
+#   | select('defined')
+#   | list
+# )
 ethereum_el_bootnodes: >-
   {{
     (
@@ -23,14 +22,15 @@ ethereum_el_bootnodes: >-
       | select('defined')
       | list
     )
-    +
-    (
-      [primary_bootnode, 'lodestar-geth-1', 'lodestar-geth-2', 'lodestar-geth-3']
-      | map('extract', hostvars, ['ethereum_node_fact_discovery_el_enode'])
-      | select('defined')
-      | list
-    )
   }}
+
+# +
+# (
+#   [primary_bootnode, 'lodestar-geth-1', 'lodestar-geth-2', 'lodestar-geth-3']
+#   | map('extract', hostvars, ['ethereum_node_fact_discovery_el_enode'])
+#   | select('defined')
+#   | list
+# )
 
 ethereum_node_xatu_sentry_enabled: true
 
