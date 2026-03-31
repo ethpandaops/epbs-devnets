@@ -1,0 +1,51 @@
+# Ansible managed. Don't change this file manually. Template info: /vendor/collections/ansible_collections/ethpandaops/general/roles/generate_kubernetes_config/templates/spamoor.yaml.j2
+
+spamoor:
+  fullnameOverride: spamoor
+  image:
+    repository: ethpandaops/spamoor
+    tag: master-latest
+    pullPolicy: Always
+  resources:
+    requests:
+      cpu: 250m
+      memory: 500Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+  ingress:
+    enabled: true
+    className: ingress-nginx-public
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/configuration-snippet: |
+        sub_filter '</head>' '<script src="https://pandamenu.ethpandaops.io/panda-menu-1.0.0.js" integrity="sha384-j6D+DanVUQs7XYmJaMXGwg2VdBq07F/ekc+bP5CNPsLOYCv4TKf8r3JBWqxwakKL" crossorigin="anonymous"></script></head>';
+        sub_filter_types text/html;
+        sub_filter_once off;
+    hosts:
+      - host: spamoor.epbs-devnet-1.ethpandaops.io
+        paths:
+          - path: /
+            pathType: Prefix
+
+  customArgs:
+    - --fulu-activation=1774958400
+
+  persistence:
+    enabled: true
+
+  privateKey: "<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.spamoor_private_key}>"
+  enableAuth: true
+  authTokenKey: "<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.spamoor_private_key}>-spamoor-jwt"
+  rpcEndpoints:
+  - "group(bootnode-1)name(bootnode-1)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-bootnode-1.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(lodestar-geth-1)name(lodestar-geth-1)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-lodestar-geth-1.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(lodestar-geth-2)name(lodestar-geth-2)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-lodestar-geth-2.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(lodestar-nethermind-1)name(lodestar-nethermind-1)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-lodestar-nethermind-1.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(lodestar-nethermind-2)name(lodestar-nethermind-2)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-lodestar-nethermind-2.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-geth-1)name(prysm-geth-1)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-geth-1.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-geth-2)name(prysm-geth-2)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-geth-2.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-geth-3)name(prysm-geth-3)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-geth-3.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-nethermind-1)name(prysm-nethermind-1)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-nethermind-1.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-nethermind-2)name(prysm-nethermind-2)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-nethermind-2.srv.epbs-devnet-1.ethpandaops.io"
+  - "group(prysm-nethermind-3)name(prysm-nethermind-3)https://<path:/secrets/services/services.enc.yaml#ethereum | jsonPath {.testnets.epbs-devnets.node_ingress.combined}>@rpc-prysm-nethermind-3.srv.epbs-devnet-1.ethpandaops.io"
